@@ -1,0 +1,121 @@
+# Config for single device full finetuning in full_finetune_single_device.py
+# using a Deepseek Math 7B model
+#
+# This config assumes that you've run the following command before launching
+# this run:
+#   tune download deepseek-ai/deepseek-math-7b-instruct /data/users/ebs/tuneathon-ckpts
+#
+# The default config uses an optimizer from bitsandbytes. If you do not have it installed,
+# you can install it with
+#   pip install bitsandbytes
+#
+# To launch on a single device, run the following command from root:
+#   tune run custom_fft_single_device --config custom_fft_single_device.yaml
+#
+# This config works only for training on single device.
+
+
+# Tokenizer
+tokenizer:
+  _component_: tokenizer.DeepSeekTokenizer
+  path: /data/users/ebs/tuneathon-ckpts/base-model/vocab.json
+  merges_file: /data/users/ebs/tuneathon-ckpts/base-model/merges.txt
+  prompt_template:
+    user:
+      - "User: "
+      - "\\nPlease reason step by step, and put your final answer within \\boxed{}."
+    assistant:
+      - "Assistant: "
+      - "\\n"
+  max_seq_len: 4096
+
+# Dataset
+dataset:
+  - _component_: torchtune.datasets.instruct_dataset
+    source: json
+    split: train
+    column_map:
+      input: theorem
+      output: proof
+    data_dir: /data/users/ebs/naturalproofsdata/
+    data_files: naturalproofs_stack_cleaned.json
+  - _component_: torchtune.datasets.instruct_dataset
+    source: json
+    split: train
+    column_map:
+      input: theorem
+      output: proof
+    data_dir: /data/users/ebs/naturalproofsdata/
+    data_files: naturalproofs_proofwiki_cleaned.json
+  - _component_: torchtune.datasets.instruct_dataset
+    source: json
+    split: train
+    column_map:
+      input: theorem
+      output: proof
+    data_dir: /data/users/ebs/naturalproofsdata/
+    data_files: naturalproofs_trench_cleaned.json
+  - _component_: torchtune.datasets.instruct_dataset
+    source: json
+    split: train
+    column_map:
+      input: theorem
+      output: proof
+    data_dir: /data/users/ebs/naturalproofsdata/
+    data_files: naturalproofs_stein_cleaned.json
+
+# Model arguments
+model:
+  _component_: torchtune.models.llama2.llama2
+  vocab_size: 102400
+  num_layers: 30
+  num_heads: 32
+  num_kv_heads: 32
+  embed_dim: 4096
+  max_seq_len: 4096
+  attn_dropout: 0.0
+  norm_eps: 1e-5
+
+checkpointer:
+  _component_: torchtune.training.FullModelHFCheckpointer
+  checkpoint_dir: /data/users/ebs/tuneathon-ckpts/base-model
+  checkpoint_files: [
+    pytorch_model-00001-of-00002.bin,
+    pytorch_model-00002-of-00002.bin,
+  ]
+  output_dir: /data/users/ebs/tuneathon-ckpts/base-model
+  model_type: LLAMA2
+resume_from_checkpoint: False
+
+# Fine-tuning arguments
+seed: null
+shuffle: True
+batch_size: 2
+epochs: 3
+optimizer:
+  _component_: bitsandbytes.optim.PagedAdamW
+  lr: 2e-5
+optimizer_in_bwd: False
+loss:
+  _component_: torchtune.modules.loss.CEWithChunkedOutputLoss
+max_steps_per_epoch: null
+gradient_accumulation_steps: 16
+compile: False
+
+# Training environment
+device: cuda
+
+# Memory management
+enable_activation_checkpointing: True
+
+# Reduced precision
+dtype: bf16
+
+# Logging
+output_dir: /tmp/full_finetune_output
+metric_logger:
+  _component_: torchtune.training.metric_logging.WandBLogger
+  log_dir: ${output_dir}
+  project: torchtune-does-math
+log_every_n_steps: 1
+log_peak_memory_stats: True

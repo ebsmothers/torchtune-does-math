@@ -1,0 +1,57 @@
+# Config for running the InferenceRecipe in generate.py to generate output from an LLM
+#
+# To launch, run the following command from root torchtune directory:
+#    tune run generate --config generation
+
+# Model arguments
+model:
+  _component_: torchtune.models.llama2.llama2
+  vocab_size: 102400
+  num_layers: 30
+  num_heads: 32
+  num_kv_heads: 32
+  embed_dim: 4096
+  max_seq_len: 4096
+  attn_dropout: 0.0
+  norm_eps: 1e-5
+
+checkpointer:
+  _component_: torchtune.training.FullModelHFCheckpointer
+  checkpoint_dir: /data/users/ebs/tuneathon-ckpts/base-model
+  checkpoint_files: [
+    pytorch_model-00001-of-00002.bin,
+    pytorch_model-00002-of-00002.bin,
+  ]
+  output_dir: /data/users/ebs/tuneathon-ckpts/base-model
+  model_type: LLAMA2
+
+device: cuda
+dtype: bf16
+
+seed: 1234
+
+tokenizer:
+  _component_: tokenizer.DeepSeekTokenizer
+  path: /data/users/ebs/tuneathon-ckpts/base-model/vocab.json
+  merges_file: /data/users/ebs/tuneathon-ckpts/base-model/merges.txt
+  prompt_template:
+    user:
+      - "User: "
+      - "\\nPlease reason step by step, and put your final answer within \\boxed{}."
+    assistant:
+      - "Assistant: "
+      - "\\n"
+  max_seq_len: 4096
+
+
+# Generation arguments; defaults taken from gpt-fast
+prompt: "Tell me a joke?"
+instruct_template: null
+chat_format: null
+max_new_tokens: 300
+temperature: 0.6 # 0.8 and 0.6 are popular values to try
+top_k: 300
+
+enable_kv_cache: True
+
+quantizer: null

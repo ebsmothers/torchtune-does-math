@@ -1,0 +1,19 @@
+# ---- All project specifications ---- #
+[project]
+name = "torchtune-does-math"
+description = "Finetuning Llama models for theorem proving"
+readme = "README.md"
+requires-python = ">=3.9"
+license = {file = "LICENSE"}
+authors = [
+    { name = "Evan Smothers", email = "ebsmothers@gmail.com" },
+]
+keywords = ["pytorch", "finetuning", "llm"]
+dependencies = [
+
+    "transformers",
+    "sentencepiece",
+    "wandb"
+
+]
+version = "0.0.0"
