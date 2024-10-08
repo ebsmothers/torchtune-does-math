@@ -52,4 +52,7 @@ On the finetuned model:
 
 ```
 tune run custom_generate --config custom_generation.yaml checkpointer.checkpoint_dir=/data/users/ebs/tuneathon-ckpts/base-model checkpointer.checkpoint_files=['hf_model_0001_0.pt','hf_model_0002_0.pt'] prompt="The square root of 2 is irrational."
+...
 ```
+
+Sample outputs can be found [here](https://gist.github.com/ebsmothers/28fde744263d1b67509d5acc100adac7).
